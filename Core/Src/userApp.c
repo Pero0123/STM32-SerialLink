@@ -42,11 +42,6 @@ int _write(int file, char *ptr, int len) {
 	return len;
 }
 
-void canInitilization();
-void canTransmitMesaage();
-void canReceiveMessage();
-void CAN1_Tx(void);
-
 void userApp() {
 	printf("Starting application\r\n\n");
 
@@ -56,21 +51,6 @@ void userApp() {
 		printf("Print every second\r\n\n");
 		HAL_Delay(1000);
 	}
-}
-void CAN1_Tx(void){
-
-}
-
-void canInitilization(){
-	//can configuration code
-}
-
-void canTransmitMesaage(){
-	//takes can message as argument and transmits it
-}
-
-void canReceiveMessage(){
-	//prints received can messages
 }
 
 /*
