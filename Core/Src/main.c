@@ -62,11 +62,6 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
 
-CAN_TxHeaderTypeDef   TxHeader; /* Header containing the information of the transmitted frame */
-CAN_RxHeaderTypeDef   RxHeader; ; /* Header containing the information of the received frame */
-uint8_t               TxData[8] = {0};  /* Buffer of the data to send */
-uint8_t               RxData[8]; /* Buffer of the received data */
-uint32_t              TxMailbox;  /* The number of the mail box that transmitted the Tx message */
 
 //used for real time stats, do not delete
 volatile unsigned long ulHighFrequencyTimerTicks;
@@ -136,15 +131,7 @@ int main(void)
   MX_TIM6_Init();
   MX_CAN1_Init();
   /* USER CODE BEGIN 2 */
-  TxHeader.StdId = 0x123;
-  TxHeader.RTR = CAN_RTR_DATA;
-  TxHeader.IDE = CAN_ID_STD;
-  TxHeader.DLC = 8;
-  TxHeader.TransmitGlobalTime = DISABLE;
-  TxData[0] = 0;
-  TxData[7] = 0xFF;
-
-  //userApp();
+   userApp();
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -173,7 +160,7 @@ int main(void)
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
- // osKernelStart();
+  osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
 
@@ -181,40 +168,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  TxData[0] ++; /* Increment the first byte */
-	  TxData[7] --; /* Increment the last byte */
-
-      /* It's mandatory to look for a free Tx mail box */
-	  while(HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0); /* Wait till a Tx mailbox is free. Using while loop instead of HAL_Delay() */
-      if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-      {
-        /* Transmission request Error */
-    	  printf("send error\r\n\n");
-        Error_Handler();
-      }
-      else
-      {
-    	  printf("message added\r\n\n");
-    	  //HAL_Delay(10);  // small delay
-    	  uint32_t fifoLevel = HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0);
-    	  printf("FIFO0 fill level: %lu\r\n", fifoLevel);
-
-      }
-
-      uint32_t fifoLevel = HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0);
-      while(fifoLevel > 0)
-      {
-          if(HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
-          {
-              printf("Received: ");
-              for(uint8_t i=0; i<RxHeader.DLC; i++)
-                  printf("%02X ", RxData[i]);
-              printf("\r\n");
-          }
-          fifoLevel--;
-      }
-
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -298,51 +251,51 @@ static void MX_CAN1_Init(void)
   /* USER CODE BEGIN CAN1_Init 1 */
 
   /* USER CODE END CAN1_Init 1 */
-  hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 20;
-  hcan1.Init.Mode = CAN_MODE_LOOPBACK;
-  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan1.Init.TimeSeg1 = CAN_BS1_13TQ;
-  hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
-  hcan1.Init.TimeTriggeredMode = DISABLE;
-  hcan1.Init.AutoBusOff = DISABLE;
-  hcan1.Init.AutoWakeUp = DISABLE;
-  hcan1.Init.AutoRetransmission = DISABLE;
-  hcan1.Init.ReceiveFifoLocked = DISABLE;
-  hcan1.Init.TransmitFifoPriority = DISABLE;
-  if (HAL_CAN_Init(&hcan1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN CAN1_Init 2 */
-  /* The CAN filter configuration */
-    sFilterConfig.FilterBank = 0;
-    sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
-    sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
-    sFilterConfig.FilterIdHigh = 0x0000;
-    sFilterConfig.FilterIdLow = 0x0000;
-    sFilterConfig.FilterMaskIdHigh = 0x0000;
-    sFilterConfig.FilterMaskIdLow = 0x0000;
-    sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0; /* The data will be received in FIFO0 */
-    sFilterConfig.FilterActivation = ENABLE;
-    sFilterConfig.SlaveStartFilterBank = 14;
-    if (HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig) != HAL_OK)
-    {
-      /* Filter configuration Error */
-      Error_Handler();
-    }
-   /* Starting the CAN peripheral */
-    if (HAL_CAN_Start(&hcan1) != HAL_OK)
-    {
-      /* Start Error */
-      Error_Handler();
-    }
-   /* Activate CAN RX notification on FIFO0 */
-    if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
-    {
-      /* Notification Error */
-      Error_Handler();
-    }
+	  hcan1.Instance = CAN1;
+	  hcan1.Init.Prescaler = 20;
+	  hcan1.Init.Mode = CAN_MODE_LOOPBACK;
+	  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
+	  hcan1.Init.TimeSeg1 = CAN_BS1_13TQ;
+	  hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
+	  hcan1.Init.TimeTriggeredMode = DISABLE;
+	  hcan1.Init.AutoBusOff = DISABLE;
+	  hcan1.Init.AutoWakeUp = DISABLE;
+	  hcan1.Init.AutoRetransmission = DISABLE;
+	  hcan1.Init.ReceiveFifoLocked = DISABLE;
+	  hcan1.Init.TransmitFifoPriority = DISABLE;
+	  if (HAL_CAN_Init(&hcan1) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
+	  /* USER CODE BEGIN CAN1_Init 2 */
+	  /* The CAN filter configuration */
+	    sFilterConfig.FilterBank = 0;
+	    sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
+	    sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
+	    sFilterConfig.FilterIdHigh = 0x0000;
+	    sFilterConfig.FilterIdLow = 0x0000;
+	    sFilterConfig.FilterMaskIdHigh = 0x0000;
+	    sFilterConfig.FilterMaskIdLow = 0x0000;
+	    sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0; /* The data will be received in FIFO0 */
+	    sFilterConfig.FilterActivation = ENABLE;
+	    sFilterConfig.SlaveStartFilterBank = 14;
+	    if (HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig) != HAL_OK)
+	    {
+	      /* Filter configuration Error */
+	      Error_Handler();
+	    }
+	   /* Starting the CAN peripheral */
+	    if (HAL_CAN_Start(&hcan1) != HAL_OK)
+	    {
+	      /* Start Error */
+	      Error_Handler();
+	    }
+	   /* Activate CAN RX notification on FIFO0 */
+	    if (HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+	    {
+	      /* Notification Error */
+	      Error_Handler();
+	    }
   /* USER CODE END CAN1_Init 2 */
 
 }
@@ -874,24 +827,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-  /* Get RX message */
-  if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
-  {
-    /* Reception Error */
-    Error_Handler();
-  }
-  else{
-  printf("Received: ");
-  for (uint8_t i = 0; i < RxHeader.DLC; i++)
-  {
-      printf("%02X ", RxData[i]);
-  }
-  printf("\r\n");
-  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-}
-}
+
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
