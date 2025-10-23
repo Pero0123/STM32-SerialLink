@@ -7,10 +7,12 @@
 
 #include "userApp.h"
 #include <stdio.h>
-
+#include "main.h"
 //Add the relevant FreeRTOS header files here
 #include "FreeRTOS.h"
 #include "task.h"
+#include "stm32l4xx_hal.h"
+
 
 //--------------------------------------------------------------
 //used for real time stats, do not delete code from this section
@@ -32,7 +34,7 @@ unsigned long getRunTimeCounterValue(void)
 extern UART_HandleTypeDef huart1;
 
 
-static void task1(void * pvParameters);
+//static void task1(void * pvParameters);
 
 // _write function used for printf
 int _write(int file, char *ptr, int len) {
@@ -40,17 +42,18 @@ int _write(int file, char *ptr, int len) {
 	return len;
 }
 
-
 void userApp() {
 	printf("Starting application\r\n\n");
 
-	xTaskCreate(task1, "Task 1", 200, NULL, 2, NULL);
-	vTaskStartScheduler();
-
+	//xTaskCreate(task1, "Task 1", 200, NULL, 2, NULL);
+	//vTaskStartScheduler();
 	while(1) {
+		printf("Print every second\r\n\n");
+		HAL_Delay(1000);
 	}
 }
 
+/*
 void task1(void * pvParameters) {
 	printf("Starting task 1\r\n\n");
 	while(1) {
@@ -59,5 +62,5 @@ void task1(void * pvParameters) {
 		vTaskDelay(pdMS_TO_TICKS(500));
 	}
 }
-
+*/
 
