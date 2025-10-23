@@ -38,8 +38,7 @@ unsigned long getRunTimeCounterValue(void)
 
 extern UART_HandleTypeDef huart1;
 
-
-//static void task1(void * pvParameters);
+static void TxTask(void * pvParameters);
 
 // _write function used for printf
 int _write(int file, char *ptr, int len) {
@@ -49,51 +48,9 @@ int _write(int file, char *ptr, int len) {
 
 void userApp() {
 	printf("Starting application\r\n\n");
-
-	//xTaskCreate(task1, "Task 1", 200, NULL, 2, NULL);
-	//vTaskStartScheduler();
-	TxHeader.StdId = 0x123;
-	TxHeader.RTR = CAN_RTR_DATA;
-	TxHeader.IDE = CAN_ID_STD;
-	TxHeader.DLC = 8;
-	TxHeader.TransmitGlobalTime = DISABLE;
-	TxData[0] = 0;
-	TxData[7] = 0xFF;
-
-	while(1) {
-		 TxData[0] ++; /* Increment the first byte */
-			  TxData[7] --; /* Increment the last byte */
-
-		      /* It's mandatory to look for a free Tx mail box */
-			  while(HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0); /* Wait till a Tx mailbox is free. Using while loop instead of HAL_Delay() */
-		      if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-		      {
-		        /* Transmission request Error */
-		    	  printf("send error\r\n\n");
-		        Error_Handler();
-		      }
-		      else
-		      {
-		    	  printf("message added\r\n\n");
-		    	  //HAL_Delay(10);  // small delay
-		    	  uint32_t fifoLevel = HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0);
-		    	  printf("FIFO0 fill level: %lu\r\n", fifoLevel);
-
-		      }
-
-		      uint32_t fifoLevel = HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0);
-		      while(fifoLevel > 0)
-		      {
-		          if(HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
-		          {
-		              printf("Received: ");
-		              for(uint8_t i=0; i<RxHeader.DLC; i++)
-		                  printf("%02X ", RxData[i]);
-		              printf("\r\n");
-		          }
-		          fifoLevel--;
-		      }
-
+	xTaskCreate(TxTask, "Transmit Task", 200, NULL, 2, NULL);
+	vTaskStartScheduler();
+	while(1){
 	}
 }
 
@@ -116,14 +73,39 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 }
 }
 
-/*
-void task1(void * pvParameters) {
-	printf("Starting task 1\r\n\n");
+
+void TxTask(void * pvParameters) {
+	printf("Starting Tx Task\r\n\n");
+
+	TxHeader.StdId = 0x123;
+	TxHeader.RTR = CAN_RTR_DATA;
+	TxHeader.IDE = CAN_ID_STD;
+	TxHeader.DLC = 8;
+	TxHeader.TransmitGlobalTime = DISABLE;
+	TxData[0] = 0;
+	TxData[7] = 0xFF;
+
 	while(1) {
-		printf("LED2 flash...\r\n");
+		TxData[0] ++; /* Increment the first byte */
+		TxData[7] --; /* Increment the last byte */
+
+		/* It's mandatory to look for a free Tx mail box */
+		while(HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0); /* Wait till a Tx mailbox is free. Using while loop instead of HAL_Delay() */
+		if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+		{
+			/* Transmission request Error */
+			  printf("send error\r\n\n");
+			Error_Handler();
+		}
+		else
+		{
+		  printf("Message added to Mailbox\r\n\n");
+		  uint32_t fifoLevel = HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0);
+		  printf("FIFO0 fill level: %lu\r\n", fifoLevel);
+		}
 		HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
 		vTaskDelay(pdMS_TO_TICKS(500));
 	}
 }
-*/
+
 
